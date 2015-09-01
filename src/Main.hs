@@ -1,4 +1,5 @@
 module Main where
+  import CSV
   import Control.Applicative
 
   data TweetTree = Empty
@@ -9,22 +10,19 @@ module Main where
 
   -- move to env var
   tweetFilePath :: String
-  tweetFilePath = "/Users/toddmohney/workspace/tweeter-bot/src/TweetPile"
+  tweetFilePath = "/Users/toddmohney/workspace/tweeter-bot/src/TweetPile.csv"
 
-  -- use buildTweetFromString and return IO [Tweet]
-  getTweetsFromFile :: IO [String]
-  getTweetsFromFile = lines <$> readFile tweetFilePath
+  parseTweet :: [String] -> Tweet
+  parseTweet = undefined
 
-  buildTweetFromString :: String -> Tweet
-  buildTweetFromString = undefined
-
-  buildTweetTree :: [Tweet]
-  buildTweetTree = undefined
-
-  findTweet :: TweetTree -> Int -> String
-  findTweet = undefined
+  insertTweet :: Tweet -> TweetTree -> TweetTree
+  insertTweet = undefined
 
   main :: IO ()
-  main = putStr "hi"
-    {- tweet <- getTweet buildTweetTree 1 -}
-    {- putStr tweet -}
+  main = do
+    {- csvData <- parseCSV <$> readFile tweetFilePath -}
+    {- case csvData of -}
+      {- Left e -> do putStrLn "Ah crap! Unable to parse CSV file: " -}
+                   {- print e -}
+      {- Right r -> mapM_ (insertTweet . parseTweet) r -}
+    putStrLn "ok, bye"
