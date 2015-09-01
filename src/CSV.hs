@@ -1,4 +1,7 @@
-module CSV (parseCSV) where
+module CSV (
+  parseCSV
+  , printCSVParserError) where
+
   import Text.ParserCombinators.Parsec
 
   csvFile = endBy line eol
@@ -24,3 +27,7 @@ module CSV (parseCSV) where
   parseCSV :: String -> Either ParseError [[String]]
   parseCSV input = parse csvFile "Tweeter Src" input
 
+  printCSVParserError :: ParseError -> IO ()
+  printCSVParserError e = do
+    putStrLn "Ah crap! Unable to parse CSV file: "
+    print e

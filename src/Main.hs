@@ -10,13 +10,21 @@ module Main where
   tweetFilePath :: String
   tweetFilePath = "/Users/toddmohney/workspace/tweeter-bot/src/TweetPile.csv"
 
+  sendTweet :: Tweet -> IO ()
+  sendTweet = print . getTweet
+
+  doTweetLoop :: TweetTree -> IO ()
+  doTweetLoop tweetTree = do
+    case findTweet 2 tweetTree of
+      Nothing -> print "No tweet found!"
+      (Just tweet) -> sendTweet tweet
+
   main :: IO ()
   main = do
     csvData <- parseCSV <$> readFile tweetFilePath
     case csvData of
-      Left e -> do putStrLn "Ah crap! Unable to parse CSV file: "
-                   print e
-      Right r -> print $ foldr insertTweet Empty $ mapMaybe parseTweet r
+      Left e -> printCSVParserError e
+      Right r -> doTweetLoop $ foldr insertTweet Empty $ mapMaybe parseTweet r
 
 
 
