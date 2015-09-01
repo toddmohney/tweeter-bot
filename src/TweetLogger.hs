@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -Wall #-}
 module TweetLogger where
   import Control.Applicative ((<$>))
 

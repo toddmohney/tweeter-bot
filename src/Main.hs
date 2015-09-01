@@ -4,7 +4,7 @@ module Main where
   import Control.Applicative
   import Data.Maybe (mapMaybe)
   import Tweet
-  import TweetLogger
+  import qualified TweetLogger as TL
   import TweetTree
 
   -- move to env var
@@ -18,22 +18,24 @@ module Main where
   sendTweet :: Tweet -> IO (Either String Tweet)
   sendTweet t = (print . getTweet $ t) >> (return (Right t))
 
-  logTweet' :: Either String Tweet -> IO ()
-  logTweet' (Left msg) = undefined
-  logTweet' (Right t) = logTweet tweetLogPath (toCSV t)
+  logTweet :: Either String Tweet -> IO ()
+  logTweet (Left msg) = undefined
+  logTweet (Right t) = TL.logTweet tweetLogPath (toCSV t)
 
   doTweetLoop :: TweetTree -> IO ()
   doTweetLoop tweetTree = do
     case findTweet 1 tweetTree of
       Nothing -> print "No tweet found!"
-      (Just tweet) -> sendTweet tweet >>= logTweet' 
+      (Just tweet) -> sendTweet tweet >>= logTweet
 
   main :: IO ()
   main = do
     csvData <- parseCSV <$> readFile tweetFilePath
     case csvData of
       Left e -> printCSVParserError e
-      Right r -> doTweetLoop $ foldr insertTweet Empty $ mapMaybe parseTweet r
+      Right r -> doTweetLoop tweetTree 
+        where
+          tweetTree = foldr insertTweet Empty $ mapMaybe parseTweet r
 
 
 
