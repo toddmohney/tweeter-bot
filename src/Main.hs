@@ -10,15 +10,23 @@ module Main where
   -- move to env var
   tweetFilePath :: String
   tweetFilePath = "/Users/toddmohney/workspace/tweeter-bot/src/TweetPile.csv"
+  -- move to env var
+  tweetLogPath :: String
+  tweetLogPath = "/Users/toddmohney/workspace/tweeter-bot/src/TweetLog.csv"
+
+  -- placeholder strategy until we drop in actual tweeting
+  sendTweet :: Tweet -> IO (Either String Tweet)
+  sendTweet t = (print . getTweet $ t) >> (return (Right t))
+
+  logTweet' :: Either String Tweet -> IO ()
+  logTweet' (Left msg) = undefined
+  logTweet' (Right t) = logTweet tweetLogPath (toCSV t)
 
   doTweetLoop :: TweetTree -> IO ()
   doTweetLoop tweetTree = do
     case findTweet 1 tweetTree of
       Nothing -> print "No tweet found!"
-      (Just tweet) -> sendTweet tweet
-
-  sendTweet :: Tweet -> IO ()
-  sendTweet = print . getTweet
+      (Just tweet) -> sendTweet tweet >>= logTweet' 
 
   main :: IO ()
   main = do
