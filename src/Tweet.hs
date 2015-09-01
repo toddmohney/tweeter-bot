@@ -13,6 +13,9 @@ module Tweet where
   instance Ord Tweet where
     compare (Tweet idx1 _) (Tweet idx2 _) = compare idx1 idx2
 
+  toCSV :: Tweet -> String
+  toCSV t = show (getIndex t) ++ "," ++ getTweet t ++ "\n"
+
   parseTweet :: [String] -> Maybe Tweet
   parseTweet [] = Nothing
   parseTweet [_] = Nothing
