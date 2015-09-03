@@ -30,7 +30,7 @@ module TweetLogger
   ensureEndsWithNewline :: String -> String
   ensureEndsWithNewline s
     | endsWithNewLine s = s
-    | otherwise = s ++ "\n"
+    | otherwise = s ++ "\r\n"
 
   endsWithNewLine :: String -> Bool
   endsWithNewLine s 
