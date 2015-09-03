@@ -24,15 +24,15 @@ module Main where
   logTweet (Right t) = TL.logTweet tweetLogPath t
 
   doTweetLoop :: TweetTree -> IO ()
-  doTweetLoop tweetTree = do
+  doTweetLoop Empty = print "No tweets in the tweet tree!"
+  doTweetLoop tweetTree@Node{} = do
     tweetIndex <- nextTweetIndex
-    case findTweet tweetIndex tweetTree of
-      (Just tweet) -> sendTweet tweet >>= logTweet
-      Nothing -> do
-        let firstTweet = findFirstTweet tweetTree in
-            case firstTweet of
-              Nothing  -> print "No tweets found!"
-              (Just t) -> sendTweet t >>= logTweet
+    case nextTweet tweetTree tweetIndex of
+      Nothing  -> print "Oh no, something went wrong!"
+      (Just t) -> sendTweet t >>= logTweet
+
+  nextTweet :: TweetTree -> Int -> Maybe Tweet
+  nextTweet tree index = findTweet index tree <|> findFirstTweet tree
 
   nextTweetIndex :: IO Int
   nextTweetIndex = do
