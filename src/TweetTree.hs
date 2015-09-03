@@ -14,6 +14,10 @@ module TweetTree where
     | idx > getIndex t  = findTweet idx r
   findTweet _ (Node _ _ _) = undefined
 
+  findFirstTweet :: TweetTree -> Maybe Tweet
+  findFirstTweet Empty            = Nothing
+  findFirstTweet (Node Empty t _) = Just t
+  findFirstTweet (Node l _ _)     = findFirstTweet l
 
   -- change this to a Red/Black tree, for better balancing
   insertTweet :: Tweet -> TweetTree -> TweetTree

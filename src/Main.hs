@@ -27,8 +27,12 @@ module Main where
   doTweetLoop tweetTree = do
     tweetIndex <- nextTweetIndex
     case findTweet tweetIndex tweetTree of
-      Nothing -> print "No tweet found!"
       (Just tweet) -> sendTweet tweet >>= logTweet
+      Nothing -> do
+        let firstTweet = findFirstTweet tweetTree in
+            case firstTweet of
+              Nothing  -> print "No tweets found!"
+              (Just t) -> sendTweet t >>= logTweet
 
   nextTweetIndex :: IO Int
   nextTweetIndex = do
