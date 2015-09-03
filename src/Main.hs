@@ -18,24 +18,31 @@ module Main where
   sendTweet :: Tweet -> IO (Either String Tweet)
   sendTweet t = (print . getTweet $ t) >> (return (Right t))
 
+  -- TODO: handle failure
   logTweet :: Either String Tweet -> IO ()
-  logTweet (Left msg) = undefined
-  logTweet (Right t) = TL.logTweet tweetLogPath (toCSV t)
+  logTweet (Left _) = undefined
+  logTweet (Right t) = TL.logTweet tweetLogPath t
 
   doTweetLoop :: TweetTree -> IO ()
   doTweetLoop tweetTree = do
-    case findTweet 1 tweetTree of
+    tweetIndex <- nextTweetIndex
+    case findTweet tweetIndex tweetTree of
       Nothing -> print "No tweet found!"
       (Just tweet) -> sendTweet tweet >>= logTweet
+
+  nextTweetIndex :: IO Int
+  nextTweetIndex = do
+    lastTweet <- TL.getLastLoggedTweet tweetLogPath 
+    case lastTweet of
+      Nothing -> return 1
+      (Just t) -> return $ (getIndex t) + 1
 
   main :: IO ()
   main = do
     csvData <- parseCSV <$> readFile tweetFilePath
     case csvData of
-      Left e -> printCSVParserError e
-      Right r -> doTweetLoop tweetTree 
+      Left e  -> printCSVParserError e
+      Right t -> doTweetLoop tweetTree 
         where
-          tweetTree = foldr insertTweet Empty $ mapMaybe parseTweet r
-
-
+          tweetTree = foldr insertTweet Empty $ mapMaybe parseTweet t
 
