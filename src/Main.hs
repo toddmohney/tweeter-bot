@@ -2,6 +2,7 @@
 module Main where
   import CSV
   import Control.Applicative
+  import Control.Monad.Writer
   import Data.Maybe (mapMaybe)
   import Tweet
   import qualified TweetLogger as TL
@@ -41,12 +42,28 @@ module Main where
       Nothing -> return 1
       (Just t) -> return $ (getIndex t) + 1
 
+  parseTweetWithLog :: [String] -> Writer [String] (Maybe Tweet)
+  parseTweetWithLog csvTweetStr = 
+    let maybeTweet = parseTweet csvTweetStr in
+        do
+          case maybeTweet of
+            Nothing  -> do
+              tell ["Error parsing CSV string: " ++ concat csvTweetStr]
+              return Nothing
+            (Just t) -> do
+              tell ["Success fully parsed tweet: " ++ (show . getIndex $ t)]
+              return (Just t)
+
+  parseTweets :: [[String]] -> [Tweet]
+  parseTweets = mapMaybe parseTweet
+
+  buildTweetTree :: [Tweet] -> TweetTree
+  buildTweetTree tweets = foldr insertTweet Empty tweets
+
   main :: IO ()
   main = do
     csvData <- parseCSV <$> readFile tweetFilePath
     case csvData of
       Left e  -> printCSVParserError e
-      Right t -> doTweetLoop tweetTree 
-        where
-          tweetTree = foldr insertTweet Empty $ mapMaybe parseTweet t
+      Right t -> doTweetLoop . buildTweetTree . parseTweets $ t
 
