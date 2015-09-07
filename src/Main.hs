@@ -6,9 +6,9 @@ module Main where
   import Control.Monad.Writer
   import Data.List (intersperse)
   import Data.Maybe (mapMaybe)
-  import Tweet
-  import qualified TweetLogger as TL
-  import TweetTree
+  import qualified Tweet        as T
+  import qualified TweetLogger  as TL
+  import qualified TweetTree    as TT
 
   -- move to env var
   tweetFilePath :: String
@@ -20,55 +20,55 @@ module Main where
   logPath :: String
   logPath = "/Users/toddmohney/workspace/tweeter-bot/log/app.log"
 
-  -- placeholder strategy until we drop in actual tweeting
-  sendTweet :: Tweet -> IO (Either String Tweet)
-  sendTweet t = (print . getTweet $ t) >> (return (Right t))
-
-  -- TODO: handle failure
-  logTweet :: Either String Tweet -> IO ()
-  logTweet (Left _) = undefined
-  logTweet (Right t) = TL.logTweet tweetLogPath t
-
-  doTweetLoop :: TweetTree -> IO ()
-  doTweetLoop Empty = print "No tweets in the tweet tree!"
-  doTweetLoop tweetTree@Node{} = do
+  doTweetLoop :: TT.TweetTree -> IO ()
+  doTweetLoop TT.Empty = print "No tweets in the tweet tree!"
+  doTweetLoop tweetTree@TT.Node{} = do
     tweetIndex <- nextTweetIndex
     case nextTweet tweetTree tweetIndex of
       Nothing  -> print "Oh no, something went wrong!"
       (Just t) -> sendTweet t >>= logTweet
 
-  nextTweet :: TweetTree -> Int -> Maybe Tweet
-  nextTweet tree index = findTweet index tree <|> findFirstTweet tree
+  -- placeholder strategy until we drop in actual tweeting
+  sendTweet :: T.Tweet -> IO (Either String T.Tweet)
+  sendTweet t = (print . T.getTweet $ t) >> (return (Right t))
+
+  -- TODO: handle failure
+  logTweet :: Either String T.Tweet -> IO ()
+  logTweet (Left _) = undefined
+  logTweet (Right t) = TL.logTweet tweetLogPath t
+
+  nextTweet :: TT.TweetTree -> Int -> Maybe T.Tweet
+  nextTweet tree index = TT.findTweet index tree <|> TT.findFirstTweet tree
 
   nextTweetIndex :: IO Int
   nextTweetIndex = do
     lastTweet <- TL.getLastLoggedTweet tweetLogPath 
     case lastTweet of
       Nothing -> return 1
-      (Just t) -> return $ (getIndex t) + 1
+      (Just t) -> return $ (T.getIndex t) + 1
 
-  parseTweetWithLog :: [String] -> Writer [String] (Maybe Tweet)
+  parseTweetWithLog :: [String] -> Writer [String] (Maybe T.Tweet)
   parseTweetWithLog csvTweetStr = 
-    let maybeTweet = parseTweet csvTweetStr in
+    let maybeTweet = T.parseTweet csvTweetStr in
         case maybeTweet of
           Nothing  -> do
             tell ["Error parsing CSV string: " ++ (concat $ intersperse ", " csvTweetStr)]
             return Nothing
           (Just t) -> do
-            tell ["Success fully parsed tweet: " ++ (show . getIndex $ t)]
+            tell ["Success fully parsed tweet: " ++ (show . T.getIndex $ t)]
             return (Just t)
 
-  parseTweetsFromResults :: ([Maybe Tweet], [String]) -> [Tweet]
+  parseTweetsFromResults :: ([Maybe T.Tweet], [String]) -> [T.Tweet]
   parseTweetsFromResults result = mapMaybe id $ fst result
 
-  parseResultsFromResults :: ([Maybe Tweet], [String]) -> [String]
+  parseResultsFromResults :: ([Maybe T.Tweet], [String]) -> [String]
   parseResultsFromResults result = snd result
 
-  buildTweetWriter :: [[String]] -> ([Maybe Tweet], [String])
+  buildTweetWriter :: [[String]] -> ([Maybe T.Tweet], [String])
   buildTweetWriter tweetList = runWriter $ mapM parseTweetWithLog tweetList
 
-  buildTweetTree :: [Tweet] -> TweetTree
-  buildTweetTree tweets = foldr insertTweet Empty tweets
+  buildTweetTree :: [T.Tweet] -> TT.TweetTree
+  buildTweetTree tweets = foldr TT.insertTweet TT.Empty tweets
 
   main :: IO ()
   main = do
