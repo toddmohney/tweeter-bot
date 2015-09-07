@@ -3,6 +3,7 @@ module Main where
   import CSV
   import Control.Applicative
   import Control.Monad.Writer
+  import Data.List (intersperse)
   import Data.Maybe (mapMaybe)
   import Tweet
   import qualified TweetLogger as TL
@@ -13,7 +14,10 @@ module Main where
   tweetFilePath = "/Users/toddmohney/workspace/tweeter-bot/src/TweetPile.csv"
   -- move to env var
   tweetLogPath :: String
-  tweetLogPath = "/Users/toddmohney/workspace/tweeter-bot/src/TweetLog.csv"
+  tweetLogPath = "/Users/toddmohney/workspace/tweeter-bot/log/tweet-log.csv"
+  -- move to env var
+  logPath :: String
+  logPath = "/Users/toddmohney/workspace/tweeter-bot/log/app.log"
 
   -- placeholder strategy until we drop in actual tweeting
   sendTweet :: Tweet -> IO (Either String Tweet)
@@ -45,17 +49,25 @@ module Main where
   parseTweetWithLog :: [String] -> Writer [String] (Maybe Tweet)
   parseTweetWithLog csvTweetStr = 
     let maybeTweet = parseTweet csvTweetStr in
-        do
-          case maybeTweet of
-            Nothing  -> do
-              tell ["Error parsing CSV string: " ++ concat csvTweetStr]
-              return Nothing
-            (Just t) -> do
-              tell ["Success fully parsed tweet: " ++ (show . getIndex $ t)]
-              return (Just t)
+        case maybeTweet of
+          Nothing  -> do
+            tell ["Error parsing CSV string: " ++ concat csvTweetStr]
+            return Nothing
+          (Just t) -> do
+            tell ["Success fully parsed tweet: " ++ (show . getIndex $ t)]
+            return (Just t)
 
-  parseTweets :: [[String]] -> [Tweet]
-  parseTweets = mapMaybe parseTweet
+  parseTweetsFromResults :: ([Maybe Tweet], [String]) -> [Tweet]
+  parseTweetsFromResults result = mapMaybe id $ fst result
+
+  parseResultsFromResults :: ([Maybe Tweet], [String]) -> [String]
+  parseResultsFromResults result = snd result
+
+  buildTweetWriter :: [[String]] -> ([Maybe Tweet], [String])
+  buildTweetWriter tweetList = runWriter $ mapM parseTweetWithLog tweetList
+
+  logParseResults :: [String] -> IO ()
+  logParseResults results = appendFile logPath . concat . intersperse "\n" $ results
 
   buildTweetTree :: [Tweet] -> TweetTree
   buildTweetTree tweets = foldr insertTweet Empty tweets
@@ -65,5 +77,10 @@ module Main where
     csvData <- parseCSV <$> readFile tweetFilePath
     case csvData of
       Left e  -> printCSVParserError e
-      Right t -> doTweetLoop . buildTweetTree . parseTweets $ t
+      Right t ->
+        let tweetParseResults = buildTweetWriter t
+            tweets = parseTweetsFromResults tweetParseResults
+            tweetParsingLogMessages = parseResultsFromResults tweetParseResults
+         in
+          (logParseResults tweetParsingLogMessages) >> (doTweetLoop . buildTweetTree $ tweets)
 
