@@ -67,7 +67,9 @@ module Main where
   buildTweetWriter tweetList = runWriter $ mapM parseTweetWithLog tweetList
 
   logParseResults :: [String] -> IO ()
-  logParseResults results = appendFile logPath . concat . intersperse "\n" $ results
+  logParseResults results = appendFile logPath $ formatLines ++ "\n"
+    where
+      formatLines = concat $ intersperse "\n" results
 
   buildTweetTree :: [Tweet] -> TweetTree
   buildTweetTree tweets = foldr insertTweet Empty tweets
@@ -76,7 +78,7 @@ module Main where
   main = do
     csvData <- parseCSV <$> readFile tweetFilePath
     case csvData of
-      Left e  -> printCSVParserError e
+      Left e  -> logParseResults [show e]
       Right t ->
         let tweetParseResults = buildTweetWriter t
             tweets = parseTweetsFromResults tweetParseResults
