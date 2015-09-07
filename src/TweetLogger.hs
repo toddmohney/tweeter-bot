@@ -23,7 +23,6 @@ module TweetLogger
     | length csv == 0 = Nothing
     | otherwise       = parseTweet $ head csv
 
-
   getLastLogItem :: String -> IO String
   getLastLogItem path = (last . lines) <$> readFile path
 

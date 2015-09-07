@@ -1,5 +1,6 @@
 {-# OPTIONS_GHC -Wall #-}
 module Main where
+  import qualified AppLogger as Logger
   import CSV
   import Control.Applicative
   import Control.Monad.Writer
@@ -51,7 +52,7 @@ module Main where
     let maybeTweet = parseTweet csvTweetStr in
         case maybeTweet of
           Nothing  -> do
-            tell ["Error parsing CSV string: " ++ concat csvTweetStr]
+            tell ["Error parsing CSV string: " ++ (concat $ intersperse ", " csvTweetStr)]
             return Nothing
           (Just t) -> do
             tell ["Success fully parsed tweet: " ++ (show . getIndex $ t)]
@@ -66,11 +67,6 @@ module Main where
   buildTweetWriter :: [[String]] -> ([Maybe Tweet], [String])
   buildTweetWriter tweetList = runWriter $ mapM parseTweetWithLog tweetList
 
-  logParseResults :: [String] -> IO ()
-  logParseResults results = appendFile logPath $ formatLines ++ "\n"
-    where
-      formatLines = concat $ intersperse "\n" results
-
   buildTweetTree :: [Tweet] -> TweetTree
   buildTweetTree tweets = foldr insertTweet Empty tweets
 
@@ -78,11 +74,12 @@ module Main where
   main = do
     csvData <- parseCSV <$> readFile tweetFilePath
     case csvData of
-      Left e  -> logParseResults [show e]
+      Left e  -> Logger.log logPath $ show e
       Right t ->
         let tweetParseResults = buildTweetWriter t
             tweets = parseTweetsFromResults tweetParseResults
             tweetParsingLogMessages = parseResultsFromResults tweetParseResults
+            formattedLogMessages = concat $ intersperse "\n" tweetParsingLogMessages
          in
-          (logParseResults tweetParsingLogMessages) >> (doTweetLoop . buildTweetTree $ tweets)
+          (Logger.log logPath formattedLogMessages) >> (doTweetLoop . buildTweetTree $ tweets)
 
