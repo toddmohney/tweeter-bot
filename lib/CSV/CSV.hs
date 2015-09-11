@@ -1,4 +1,4 @@
-module CSV (
+module CSV.CSV (
   parseCSV
   , printCSVParserError) where
 

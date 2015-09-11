@@ -1,24 +1,24 @@
 {-# OPTIONS_GHC -Wall #-}
 module Main where
   import qualified AppLogger as Logger
-  import CSV
+  import CSV.CSV as CSV
   import Control.Applicative
   import Control.Monad.Writer
   import Data.List (intersperse)
   import Data.Maybe (mapMaybe)
-  import Tweet
-  import qualified TweetLogger as TL
-  import TweetTree
+  import Tweet.Tweet as Tweet
+  import qualified Tweet.TweetLogger as TL
+  import Tweet.TweetTree as TweetTree
 
   -- move to env var
   tweetFilePath :: String
-  tweetFilePath = "/Users/toddmohney/workspace/tweeter-bot/src/TweetPile.csv"
+  tweetFilePath = "/Users/gust/workspace/tweeter-bot/src/TweetPile.csv"
   -- move to env var
   tweetLogPath :: String
-  tweetLogPath = "/Users/toddmohney/workspace/tweeter-bot/log/tweet-log.csv"
+  tweetLogPath = "/Users/gust/workspace/tweeter-bot/log/tweet-log.csv"
   -- move to env var
   logPath :: String
-  logPath = "/Users/toddmohney/workspace/tweeter-bot/log/app.log"
+  logPath = "/Users/gust/workspace/tweeter-bot/log/app.log"
 
   -- placeholder strategy until we drop in actual tweeting
   sendTweet :: Tweet -> IO (Either String Tweet)

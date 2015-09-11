@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -Wall #-}
-module TweetTree where
-  import Tweet
+module Tweet.TweetTree where
+  import Tweet.Tweet as Tweet
 
   data TweetTree = Empty
                    | Node TweetTree Tweet TweetTree

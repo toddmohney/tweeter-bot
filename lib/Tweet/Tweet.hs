@@ -1,5 +1,5 @@
 {-# OPTIONS_GHC -Wall #-}
-module Tweet where
+module Tweet.Tweet where
   import Data.Maybe
   import Safe (readMay)
 
