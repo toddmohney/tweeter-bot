@@ -3,7 +3,12 @@ module Tweet.Tweet where
   import Control.Monad.Writer
   import Data.List (intersperse)
   import Data.Maybe
+  import qualified Data.Text           as T
+  import Network.HTTP.Conduit (withManager)
   import Safe (readMay)
+  import Tweet.API.Config              as ApiConfig
+  import qualified Web.Twitter.Conduit as TC
+  import Web.Twitter.Types
 
   data Tweet = Tweet { getIndex :: Int
                      , getTweet :: String }
@@ -14,6 +19,17 @@ module Tweet.Tweet where
 
   instance Ord Tweet where
     compare (Tweet idx1 _) (Tweet idx2 _) = compare idx1 idx2
+
+  sendTweet :: Tweet -> IO Web.Twitter.Types.Status
+  sendTweet t = do
+    putStrLn $ "Posting message: " ++ getTweet t
+    twInfo <- ApiConfig.getTWInfoFromEnv
+    withManager $ \mgr -> TC.call twInfo mgr $ TC.update $ T.pack . getTweet $ t
+
+  -- prints to screen instead of posing to Twitter API
+  -- used for local development
+  sendMockTweet :: Tweet -> IO Tweet
+  sendMockTweet t = (print . getTweet $ t) >> return t
 
   toCSV :: Tweet -> String
   toCSV t = show (getIndex t) ++ "," ++ getTweet t

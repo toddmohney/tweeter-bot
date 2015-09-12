@@ -18,20 +18,22 @@ module Main where
     tweetDelay <- Config.tweetDelay
     case nextTweet tweetTree tweetIndex of
       Nothing  -> print "Oh no, something went wrong!"
-      (Just t) -> sendTweet t >>= logTweet
+      (Just t) -> do
+        status <- sendTweet t
+        logTweetToDataStore t
+        appendToAppLog $ show status
     threadDelay tweetDelay
     doTweetLoop tweetTree
 
-  -- placeholder strategy until we drop in actual tweeting
-  sendTweet :: Tweet -> IO (Either String Tweet)
-  sendTweet t = (print . getTweet $ t) >> (return (Right t))
-
-  -- TODO: handle failure
-  logTweet :: Either String Tweet -> IO ()
-  logTweet (Left _) = undefined
-  logTweet (Right t) = do
+  logTweetToDataStore :: Tweet -> IO ()
+  logTweetToDataStore t = do
     tweetLogPath <- Config.tweetLogPath
     TweetLogger.logTweet tweetLogPath t
+
+  appendToAppLog :: String -> IO ()
+  appendToAppLog str = do
+    logPath <- Config.logPath
+    Logger.log logPath str
 
   nextTweet :: TweetTree -> Int -> Maybe Tweet
   nextTweet tree index = findTweet index tree <|> findFirstTweet tree
@@ -50,12 +52,12 @@ module Main where
     tweetFilePath <- Config.tweetFilePath
     csvData       <- parseCSV <$> readFile tweetFilePath
     case csvData of
-      Left e  -> Logger.log logPath $ show e
+      Left e  -> appendToAppLog $ show e
       Right t ->
         let tweetParseResults       = buildTweetWriter t
             tweets                  = parseTweetsFromWriter tweetParseResults
             tweetParsingLogMessages = parseResultsFromWriter tweetParseResults
             formattedLogMessages    = concat $ intersperse "\n" tweetParsingLogMessages
          in
-          (Logger.log logPath formattedLogMessages) >> (doTweetLoop . buildTweetTree $ tweets)
+          (appendToAppLog formattedLogMessages) >> (doTweetLoop . buildTweetTree $ tweets)
 
