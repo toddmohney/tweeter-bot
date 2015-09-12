@@ -6,19 +6,10 @@ module Main where
   import Control.Monad.Writer
   import Data.List (intersperse)
   import Data.Maybe (mapMaybe)
+  import System.Environment (getEnv)
   import Tweet.Tweet as Tweet
   import qualified Tweet.TweetLogger as TweetLogger
   import Tweet.TweetTree as TweetTree
-
-  -- move to env var
-  tweetFilePath :: String
-  tweetFilePath = "/Users/toddmohney/workspace/tweeter-bot/src/TweetPile.csv"
-  -- move to env var
-  tweetLogPath :: String
-  tweetLogPath = "/Users/toddmohney/workspace/tweeter-bot/log/tweet-log.csv"
-  -- move to env var
-  logPath :: String
-  logPath = "/Users/toddmohney/workspace/tweeter-bot/log/app.log"
 
   doTweetLoop :: TweetTree -> IO ()
   doTweetLoop Empty = print "No tweets in the tweet tree!"
@@ -35,14 +26,17 @@ module Main where
   -- TODO: handle failure
   logTweet :: Either String Tweet -> IO ()
   logTweet (Left _) = undefined
-  logTweet (Right t) = TweetLogger.logTweet tweetLogPath t
+  logTweet (Right t) = do
+    tweetLogPath <- getEnv "TWEETBOT_TWEET_LOG_PATH"
+    TweetLogger.logTweet tweetLogPath t
 
   nextTweet :: TweetTree -> Int -> Maybe Tweet
   nextTweet tree index = findTweet index tree <|> findFirstTweet tree
 
   nextTweetIndex :: IO Int
   nextTweetIndex = do
-    lastTweet <- TweetLogger.getLastLoggedTweet tweetLogPath 
+    tweetLogPath <- getEnv "TWEETBOT_TWEET_LOG_PATH"
+    lastTweet    <- TweetLogger.getLastLoggedTweet tweetLogPath 
     case lastTweet of
       Nothing -> return 1
       (Just t) -> return $ (getIndex t) + 1
@@ -72,6 +66,8 @@ module Main where
 
   main :: IO ()
   main = do
+    logPath       <- getEnv "TWEETBOT_LOG_PATH"
+    tweetFilePath <- getEnv "TWEETBOT_FILE_PATH"
     csvData       <- parseCSV <$> readFile tweetFilePath
     case csvData of
       Left e  -> Logger.log logPath $ show e
