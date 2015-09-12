@@ -2,9 +2,9 @@
 module Main where
   import qualified AppLogger         as Logger
   import CSV.CSV                     as CSV
+  import qualified Config            as Config
   import Control.Applicative
   import Data.List (intersperse)
-  import System.Environment (getEnv)
   import Tweet.Tweet                 as Tweet
   import qualified Tweet.TweetLogger as TweetLogger
   import Tweet.TweetTree             as TweetTree
@@ -26,7 +26,7 @@ module Main where
   logTweet :: Either String Tweet -> IO ()
   logTweet (Left _) = undefined
   logTweet (Right t) = do
-    tweetLogPath <- getEnv "TWEETBOT_TWEET_LOG_PATH"
+    tweetLogPath <- Config.tweetLogPath
     TweetLogger.logTweet tweetLogPath t
 
   nextTweet :: TweetTree -> Int -> Maybe Tweet
@@ -34,16 +34,16 @@ module Main where
 
   nextTweetIndex :: IO Int
   nextTweetIndex = do
-    tweetLogPath <- getEnv "TWEETBOT_TWEET_LOG_PATH"
-    lastTweet    <- TweetLogger.getLastLoggedTweet tweetLogPath 
+    tweetLogPath <- Config.tweetLogPath
+    lastTweet    <- TweetLogger.getLastLoggedTweet tweetLogPath
     case lastTweet of
       Nothing -> return 1
       (Just t) -> return $ (getIndex t) + 1
 
   main :: IO ()
   main = do
-    logPath       <- getEnv "TWEETBOT_LOG_PATH"
-    tweetFilePath <- getEnv "TWEETBOT_FILE_PATH"
+    logPath       <- Config.logPath
+    tweetFilePath <- Config.tweetFilePath
     csvData       <- parseCSV <$> readFile tweetFilePath
     case csvData of
       Left e  -> Logger.log logPath $ show e
