@@ -1,12 +1,12 @@
 {-# OPTIONS_GHC -Wall #-}
-module TweetLogger 
+module Tweet.TweetLogger 
   (logTweet
    , getLastLoggedTweet
    ) where
 
   import Control.Applicative ((<$>))
-  import CSV
-  import Tweet
+  import CSV.CSV as CSV
+  import Tweet.Tweet as Tweet
 
   logTweet :: FilePath -> Tweet -> IO ()
   logTweet fp t = appendFile fp $ ensureEndsWithNewline $ toCSV t
