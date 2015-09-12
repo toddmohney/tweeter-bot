@@ -12,4 +12,4 @@ module Config where
   tweetLogPath = getEnv "TWEETBOT_TWEET_LOG_PATH"
 
   tweetDelay :: IO Int
-  tweetDelay = read <$> getEnv "TWEETBOT_TWEET_LOG_PATH"
+  tweetDelay = read <$> getEnv "TWEETBOT_TWEET_DELAY"

@@ -3,8 +3,8 @@ module Main where
   import qualified AppLogger         as Logger
   import CSV.CSV                     as CSV
   import qualified Config            as Config
-  import Control.Applicative
-  import Control.Concurrent
+  import Control.Applicative ((<$>), (<|>))
+  import Control.Concurrent (threadDelay)
   import Data.List (intersperse)
   import Tweet.Tweet                 as Tweet
   import qualified Tweet.TweetLogger as TweetLogger

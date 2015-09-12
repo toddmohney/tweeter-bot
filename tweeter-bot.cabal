@@ -22,12 +22,21 @@ library
     , Tweet.TweetLogger
     , Tweet.TweetTree
     , Tweet.TweetWriter
+    , Tweet.API.Config
     , CSV.CSV
   build-depends:
     base >=4.7 && < 5.0
     , parsec
     , safe
     , mtl
+    , http-conduit
+    , twitter-conduit
+    , authenticate-oauth
+    , network-uri
+    , lens
+    , bytestring
+    , containers
+    , case-insensitive
 
   hs-source-dirs: lib
   default-language:    Haskell2010
