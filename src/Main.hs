@@ -1,15 +1,14 @@
 {-# OPTIONS_GHC -Wall #-}
 module Main where
-  import qualified AppLogger as Logger
-  import CSV.CSV as CSV
+  import qualified AppLogger         as Logger
+  import CSV.CSV                     as CSV
   import Control.Applicative
-  import Control.Monad.Writer
   import Data.List (intersperse)
-  import Data.Maybe (mapMaybe)
   import System.Environment (getEnv)
-  import Tweet.Tweet as Tweet
+  import Tweet.Tweet                 as Tweet
   import qualified Tweet.TweetLogger as TweetLogger
-  import Tweet.TweetTree as TweetTree
+  import Tweet.TweetTree             as TweetTree
+  import Tweet.TweetWriter           as TweetWriter
 
   doTweetLoop :: TweetTree -> IO ()
   doTweetLoop Empty = print "No tweets in the tweet tree!"
@@ -41,29 +40,6 @@ module Main where
       Nothing -> return 1
       (Just t) -> return $ (getIndex t) + 1
 
-  parseTweetWithLog :: [String] -> Writer [String] (Maybe Tweet)
-  parseTweetWithLog csvTweetStr = 
-    let maybeTweet = parseTweet csvTweetStr in
-        case maybeTweet of
-          Nothing  -> do
-            tell ["Error parsing CSV string: " ++ (concat $ intersperse ", " csvTweetStr)]
-            return Nothing
-          (Just t) -> do
-            tell ["Success fully parsed tweet: " ++ (show . getIndex $ t)]
-            return (Just t)
-
-  parseTweetsFromResults :: ([Maybe Tweet], [String]) -> [Tweet]
-  parseTweetsFromResults result = mapMaybe id $ fst result
-
-  parseResultsFromResults :: ([Maybe Tweet], [String]) -> [String]
-  parseResultsFromResults result = snd result
-
-  buildTweetWriter :: [[String]] -> ([Maybe Tweet], [String])
-  buildTweetWriter tweetList = runWriter $ mapM parseTweetWithLog tweetList
-
-  buildTweetTree :: [Tweet] -> TweetTree
-  buildTweetTree tweets = foldr insertTweet Empty tweets
-
   main :: IO ()
   main = do
     logPath       <- getEnv "TWEETBOT_LOG_PATH"
@@ -73,8 +49,8 @@ module Main where
       Left e  -> Logger.log logPath $ show e
       Right t ->
         let tweetParseResults       = buildTweetWriter t
-            tweets                  = parseTweetsFromResults tweetParseResults
-            tweetParsingLogMessages = parseResultsFromResults tweetParseResults
+            tweets                  = parseTweetsFromWriter tweetParseResults
+            tweetParsingLogMessages = parseResultsFromWriter tweetParseResults
             formattedLogMessages    = concat $ intersperse "\n" tweetParsingLogMessages
          in
           (Logger.log logPath formattedLogMessages) >> (doTweetLoop . buildTweetTree $ tweets)

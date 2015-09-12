@@ -21,6 +21,7 @@ library
     Tweet.Tweet
     , Tweet.TweetLogger
     , Tweet.TweetTree
+    , Tweet.TweetWriter
     , CSV.CSV
   build-depends:
     base >=4.7 && < 5.0

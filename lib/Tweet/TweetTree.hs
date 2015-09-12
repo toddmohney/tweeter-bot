@@ -6,6 +6,9 @@ module Tweet.TweetTree where
                    | Node TweetTree Tweet TweetTree
                    deriving (Show)
 
+  buildTweetTree :: [Tweet] -> TweetTree
+  buildTweetTree tweets = foldr insertTweet Empty tweets
+
   findTweet :: Int -> TweetTree -> Maybe Tweet
   findTweet _ Empty = Nothing
   findTweet idx (Node l t r)

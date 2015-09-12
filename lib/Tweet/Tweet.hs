@@ -1,5 +1,7 @@
 {-# OPTIONS_GHC -Wall #-}
 module Tweet.Tweet where
+  import Control.Monad.Writer
+  import Data.List (intersperse)
   import Data.Maybe
   import Safe (readMay)
 
@@ -26,3 +28,13 @@ module Tweet.Tweet where
         index = readMay idx
   parseTweet (_:_:_) = Nothing
 
+  parseTweetWithLog :: [String] -> Writer [String] (Maybe Tweet)
+  parseTweetWithLog csvTweetStr = 
+    let maybeTweet = parseTweet csvTweetStr in
+        case maybeTweet of
+          Nothing  -> do
+            tell ["Error parsing CSV string: " ++ (concat $ intersperse ", " csvTweetStr)]
+            return Nothing
+          (Just t) -> do
+            tell ["Success fully parsed tweet: " ++ (show . getIndex $ t)]
+            return (Just t)
