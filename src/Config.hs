@@ -1,4 +1,5 @@
 module Config where
+  import Control.Applicative ((<$>))
   import System.Environment (getEnv)
 
   logPath :: IO String
@@ -9,3 +10,6 @@ module Config where
 
   tweetLogPath :: IO String
   tweetLogPath = getEnv "TWEETBOT_TWEET_LOG_PATH"
+
+  tweetDelay :: IO Int
+  tweetDelay = read <$> getEnv "TWEETBOT_TWEET_LOG_PATH"

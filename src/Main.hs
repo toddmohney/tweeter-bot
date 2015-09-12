@@ -4,6 +4,7 @@ module Main where
   import CSV.CSV                     as CSV
   import qualified Config            as Config
   import Control.Applicative
+  import Control.Concurrent
   import Data.List (intersperse)
   import Tweet.Tweet                 as Tweet
   import qualified Tweet.TweetLogger as TweetLogger
@@ -14,9 +15,12 @@ module Main where
   doTweetLoop Empty = print "No tweets in the tweet tree!"
   doTweetLoop tweetTree@Node{} = do
     tweetIndex <- nextTweetIndex
+    tweetDelay <- Config.tweetDelay
     case nextTweet tweetTree tweetIndex of
       Nothing  -> print "Oh no, something went wrong!"
       (Just t) -> sendTweet t >>= logTweet
+    threadDelay tweetDelay
+    doTweetLoop tweetTree
 
   -- placeholder strategy until we drop in actual tweeting
   sendTweet :: Tweet -> IO (Either String Tweet)
