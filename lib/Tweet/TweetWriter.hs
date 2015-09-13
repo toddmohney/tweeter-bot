@@ -10,10 +10,10 @@ module Tweet.TweetWriter (
   type TweetWriter = ([Maybe Tweet], [String])
 
   parseTweetsFromWriter :: TweetWriter -> [Tweet]
-  parseTweetsFromWriter result = mapMaybe id $ fst result
+  parseTweetsFromWriter writer = mapMaybe id $ fst writer
 
   parseResultsFromWriter :: TweetWriter -> [String]
-  parseResultsFromWriter result = snd result
+  parseResultsFromWriter writer = snd writer
 
   buildTweetWriter :: [[String]] -> TweetWriter
   buildTweetWriter tweetList = runWriter $ mapM parseTweetWithLog tweetList

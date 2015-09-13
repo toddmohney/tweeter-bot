@@ -23,6 +23,7 @@ library
     , Tweet.TweetTree
     , Tweet.TweetWriter
     , Tweet.API.Config
+    , Tweet.API.Twitter
     , CSV.CSV
   build-depends:
     base >=4.7 && < 5.0

@@ -4,10 +4,8 @@ module Tweet.Tweet where
   import Data.List (intersperse)
   import Data.Maybe
   import qualified Data.Text           as T
-  import Network.HTTP.Conduit (withManager)
   import Safe (readMay)
-  import Tweet.API.Config              as ApiConfig
-  import qualified Web.Twitter.Conduit as TC
+  import qualified Tweet.API.Twitter   as API
   import Web.Twitter.Types
 
   data Tweet = Tweet { getIndex :: Int
@@ -23,8 +21,7 @@ module Tweet.Tweet where
   sendTweet :: Tweet -> IO Web.Twitter.Types.Status
   sendTweet t = do
     putStrLn $ "Posting message: " ++ getTweet t
-    twInfo <- ApiConfig.getTWInfoFromEnv
-    withManager $ \mgr -> TC.call twInfo mgr $ TC.update $ T.pack . getTweet $ t
+    API.tweet $ T.pack . getTweet $ t
 
   -- prints to screen instead of posing to Twitter API
   -- used for local development
