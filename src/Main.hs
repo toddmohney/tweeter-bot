@@ -19,7 +19,7 @@ module Main where
     case nextTweet tweetTree tweetIndex of
       Nothing  -> print "Oh no, something went wrong!"
       (Just t) -> do
-        status <- T.sendTweet t
+        status <- T.sendMockTweet t
         logTweetToDataStore t
         appendToAppLog $ show status
     threadDelay tweetDelay
@@ -36,7 +36,7 @@ module Main where
     Logger.log logPath str
 
   nextTweet :: T.TweetTree -> Int -> Maybe T.Tweet
-  nextTweet tree index = T.findTweet index tree <|> T.findFirstTweet tree
+  nextTweet tree idx = T.findTweet idx tree <|> T.findFirstTweet tree
 
   nextTweetIndex :: IO Int
   nextTweetIndex = do

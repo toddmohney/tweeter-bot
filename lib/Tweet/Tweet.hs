@@ -9,14 +9,15 @@ module Tweet.Tweet where
   import Web.Twitter.Types
 
   data Tweet = Tweet { index :: Int
-                     , content :: String }
-                     deriving (Show)
+                     , content :: String
+                     , relatedTweet :: Maybe Int 
+                     } deriving (Show)
 
   instance Eq Tweet where
     a == b = getIndex a == getIndex b
 
   instance Ord Tweet where
-    compare (Tweet idx1 _) (Tweet idx2 _) = compare idx1 idx2
+    compare (Tweet idx1 _ _) (Tweet idx2 _ _) = compare idx1 idx2
 
   sendTweet :: Tweet -> IO Web.Twitter.Types.Status
   sendTweet t = do
@@ -34,17 +35,29 @@ module Tweet.Tweet where
   getContent :: Tweet -> String
   getContent = content
 
+  getRelatedTweet :: Tweet -> Maybe Int
+  getRelatedTweet = relatedTweet
+
+  hasRelatedTweet :: Tweet -> Bool
+  hasRelatedTweet (Tweet _ _ (Just _)) = True
+  hasRelatedTweet (Tweet _ _ Nothing)    = False
+
   toCSV :: Tweet -> String
-  toCSV t = show (getIndex t) ++ "," ++ getContent t
+  toCSV t = show (getIndex t) ++ "," ++ getContent t ++ "," ++ relTweet
+    where 
+      relTweet = do
+        case (relatedTweet t) of
+          Nothing   -> ""
+          (Just rt) -> show rt
 
   parseTweet :: [String] -> Maybe Tweet
   parseTweet [] = Nothing
   parseTweet [_] = Nothing
-  parseTweet (idx:tweet:[])
-    | isJust safeIndex = Just $ Tweet (fromJust safeIndex) tweet
+  parseTweet (i:c:rt:[])
+    | isJust safeIndex = Just $ Tweet (fromJust safeIndex) c (readMay rt)
     | otherwise = Nothing
       where 
-        safeIndex = readMay idx
+        safeIndex = readMay i
   parseTweet (_:_:_) = Nothing
 
   parseTweetWithLog :: [String] -> Writer [String] (Maybe Tweet)
