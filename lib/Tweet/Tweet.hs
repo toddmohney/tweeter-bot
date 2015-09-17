@@ -8,8 +8,8 @@ module Tweet.Tweet where
   import qualified Tweet.API.Twitter   as API
   import Web.Twitter.Types
 
-  data Tweet = Tweet { getIndex :: Int
-                     , getTweet :: String }
+  data Tweet = Tweet { index :: Int
+                     , content :: String }
                      deriving (Show)
 
   instance Eq Tweet where
@@ -20,25 +20,31 @@ module Tweet.Tweet where
 
   sendTweet :: Tweet -> IO Web.Twitter.Types.Status
   sendTweet t = do
-    putStrLn $ "Posting message: " ++ getTweet t
-    API.tweet $ T.pack . getTweet $ t
+    putStrLn $ "Posting message: " ++ getContent t
+    API.tweet $ T.pack . getContent $ t
 
   -- prints to screen instead of posing to Twitter API
   -- used for local development
   sendMockTweet :: Tweet -> IO Tweet
-  sendMockTweet t = (print . getTweet $ t) >> return t
+  sendMockTweet t = (print . getContent $ t) >> return t
+
+  getIndex :: Tweet -> Int
+  getIndex = index
+
+  getContent :: Tweet -> String
+  getContent = content
 
   toCSV :: Tweet -> String
-  toCSV t = show (getIndex t) ++ "," ++ getTweet t
+  toCSV t = show (getIndex t) ++ "," ++ getContent t
 
   parseTweet :: [String] -> Maybe Tweet
   parseTweet [] = Nothing
   parseTweet [_] = Nothing
   parseTweet (idx:tweet:[])
-    | isJust index = Just $ Tweet (fromJust index) tweet
+    | isJust safeIndex = Just $ Tweet (fromJust safeIndex) tweet
     | otherwise = Nothing
       where 
-        index = readMay idx
+        safeIndex = readMay idx
   parseTweet (_:_:_) = Nothing
 
   parseTweetWithLog :: [String] -> Writer [String] (Maybe Tweet)
