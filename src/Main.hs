@@ -68,9 +68,8 @@ module Main where
             tweetTree               = T.buildTweetTree $ tweets
          in
          do
-           appendToAppLog formattedLogMessages
-
+           appendToAppLog formattedLogMessages                       -- log parsing results
            nextTweetIndex <- getNextTweetIndex
-           doTweetLoop (getTweet tweetTree nextTweetIndex) tweetTree
+           doTweetLoop (getTweet tweetTree nextTweetIndex) tweetTree -- start tweet loop
 
 
