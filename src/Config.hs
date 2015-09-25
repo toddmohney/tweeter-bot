@@ -13,3 +13,6 @@ module Config where
 
   tweetDelay :: IO Int
   tweetDelay = read <$> getEnv "TWEETBOT_TWEET_DELAY"
+
+  relatedTweetDelay :: IO Int
+  relatedTweetDelay = read <$> getEnv "TWEETBOT_TWEET_DELAY_BTW_RELATED_TWEETS"

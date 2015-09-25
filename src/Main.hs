@@ -11,19 +11,27 @@ module Main where
   import Tweet.TweetTree             as T
   import Tweet.TweetWriter           as T
 
-  doTweetLoop :: T.TweetTree -> IO ()
-  doTweetLoop Empty = print "No tweets in the tweet tree!"
-  doTweetLoop tweetTree@Node{} = do
-    tweetIndex <- nextTweetIndex
-    tweetDelay <- Config.tweetDelay
-    case nextTweet tweetTree tweetIndex of
-      Nothing  -> print "Oh no, something went wrong!"
-      (Just t) -> do
-        status <- T.sendMockTweet t
-        logTweetToDataStore t
-        appendToAppLog $ show status
-    threadDelay tweetDelay
-    doTweetLoop tweetTree
+  doTweetLoop :: Maybe T.Tweet -> T.TweetTree -> IO ()
+  doTweetLoop _ Empty = print "No tweets in the tweet tree!"
+
+  doTweetLoop Nothing tweetTree@Node{} = do
+    nextTweetIndex <- getNextTweetIndex
+    doTweetLoop (getTweet tweetTree nextTweetIndex) tweetTree
+
+  doTweetLoop (Just tweet) tweetTree@Node{} = do
+    tweetDelay <- getTweetDelay tweet
+    status     <- T.sendMockTweet tweet   -- send tweet
+    logTweetToDataStore tweet             -- record most recent Tweet
+    appendToAppLog $ show status          -- record status of API request to app log
+    threadDelay $ tweetDelay              -- sleep for a bit
+
+    nextTweetIndex <- getNextTweetIndex
+    doTweetLoop (getTweet tweetTree nextTweetIndex) tweetTree
+
+  getTweetDelay :: T.Tweet -> IO Int
+  getTweetDelay tweet
+    | (hasRelatedTweet tweet) = Config.relatedTweetDelay
+    | otherwise               = Config.tweetDelay
 
   logTweetToDataStore :: T.Tweet -> IO ()
   logTweetToDataStore t = do
@@ -35,11 +43,11 @@ module Main where
     logPath <- Config.logPath
     Logger.log logPath str
 
-  nextTweet :: T.TweetTree -> Int -> Maybe T.Tweet
-  nextTweet tree idx = T.findTweet idx tree <|> T.findFirstTweet tree
+  getTweet :: T.TweetTree -> Int -> Maybe T.Tweet
+  getTweet tree idx = T.findTweet idx tree <|> T.findFirstTweet tree
 
-  nextTweetIndex :: IO Int
-  nextTweetIndex = do
+  getNextTweetIndex :: IO Int
+  getNextTweetIndex = do
     tweetLogPath <- Config.tweetLogPath
     lastTweet    <- T.getLastLoggedTweet tweetLogPath
     case lastTweet of
@@ -57,6 +65,12 @@ module Main where
             tweets                  = T.parseTweetsFromWriter tweetParseResults
             tweetParsingLogMessages = T.parseResultsFromWriter tweetParseResults
             formattedLogMessages    = concat $ intersperse "\n" tweetParsingLogMessages
+            tweetTree               = T.buildTweetTree $ tweets
          in
-          (appendToAppLog formattedLogMessages) >> (doTweetLoop . T.buildTweetTree $ tweets)
+         do
+           appendToAppLog formattedLogMessages
+
+           nextTweetIndex <- getNextTweetIndex
+           doTweetLoop (getTweet tweetTree nextTweetIndex) tweetTree
+
 
